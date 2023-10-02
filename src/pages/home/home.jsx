@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react'
 import { getBooks } from '../../services/booksService';
 import './home.scss';
+import useFilter from '../../hooks/useFilter';
 
 
 const Home = () => {
     const [books, setBooks] = useState([]);
-    const [filterResult, setFilterResult] = useState([]);
-    const [responseFilter, setResponseFilter] = useState('');
+    const { filters, filterResult, responseFilter, setFilters, handleFilter } = useFilter();
+    // const [filterResult, setFilterResult] = useState([]);
+    // const [responseFilter, setResponseFilter] = useState('');
+    // const [filters, setFilters] = useState({})
     const [categories, setCategories] = useState([]);
     const [rangePages, setRangePages] = useState({
         min: 0,
         max: 1000,
         step: 10
     });
-    const [filters, setFilters] = useState({})
 
     useEffect(() => {
         getBooks().then((response) => {
@@ -26,6 +28,7 @@ const Home = () => {
                 ...rangePages,
                 ...range
             })
+            setFilters({ ...filters, pages: range.max })
         })
     }, []);
 
@@ -45,36 +48,36 @@ const Home = () => {
         }
     }
 
-    const onFilter = (event) => {
-        const { name, value } = event.target;
-        const filterParams = {
-            ...filters,
-            [name]: value
-        }
-        setFilters(filterParams)
-        // console.log({
-        //     ...filters,
-        //     [name]: value
-        // })
-        if (value) {
-            let filtered = [...books];
-            for (const key in filterParams) {
-                if (filterParams[key]) {
-                    const filteredResult = key === 'pages' ? filtered.filter(element => element.book[key] <= filterParams[key]) : filtered.filter((element) => element.book[key] == filterParams[key])
-                    filtered = [...filteredResult];
-                }
-            }
-            // console.log(filtered);
-            setFilterResult(filtered);
-            setResponseFilter(()=>filtered.length?'': 'No se encontraron resultados')
-        } else {
-            setFilterResult([]);
-            setResponseFilter('Filtros limpiados')
-        }
+    const onFilter = (event) => handleFilter(event, books)
 
-
-    }
-
+    // const onFilter = (event) => {
+    //     const { name, value } = event.target;
+    //     const filterParams = {
+    //         ...filters,
+    //         [name]: value
+    //     }
+    //     setFilters(filterParams)
+    //     console.log({
+    //        ...filters,
+    //         [name]: value
+    //      })
+    //     if (value) {
+    //         let filtered = [...books];
+    //         for (const key in filterParams) {
+    //             if (filterParams[key]) {
+    //                 const filteredResult = key === 'pages' ? filtered.filter(element => element.book[key] <= filterParams[key]) : filtered.filter((element) => element.book[key] == filterParams[key])
+    //                 filtered = [...filteredResult];
+    //             }
+    //         }
+    //          console.log(filtered);
+    //         setFilterResult(filtered);
+    //         setResponseFilter(()=>filtered.length?'': 'No se encontraron resultados')
+    //     } else {
+    //         setFilterResult([]);
+    //         setResponseFilter('Filtros limpiados')
+    //     }
+    // }
+ 
     return (
         <main>
             <section className='filtersContainer'>
@@ -99,10 +102,10 @@ const Home = () => {
                 {
                     filterResult.length ? filterResult.map((item, index) => <figure key={index}>
                         <img src={item.book.cover} alt={item.book.title} />
-                    </figure>):
-                    books.length > 0 ? books.map((item, index) => <figure key={index}>
-                        <img src={item.book.cover} alt={item.book.title} />
-                    </figure>) : <div>...Cargando</div>
+                    </figure>) :
+                        books.length > 0 ? books.map((item, index) => <figure key={index}>
+                            <img src={item.book.cover} alt={item.book.title} />
+                        </figure>) : <div>...Cargando</div>
                 }
             </section>
         </main>
